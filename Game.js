@@ -26,6 +26,7 @@ var config = {
 };
 var game = new Phaser.Game(config);
 let cursors;
+var emitter;
 
 var Bullet = new Phaser.Class({
 
@@ -42,6 +43,7 @@ var Bullet = new Phaser.Class({
             this.xSpeed = 0;
             this.ySpeed = 0;
             this.setSize(12, 12, true);
+            this.setScale(7)
         },
 
     // Fires a bullet from the player to the reticle
@@ -59,7 +61,7 @@ var Bullet = new Phaser.Class({
             this.ySpeed = -this.speed * Math.cos(this.direction);
         }
 
-        this.rotation = shooter.rotation; // angle bullet with shooters rotation
+        this.rotation = shooter.rotation - Math.PI / 2; // angle bullet with shooters rotation
         this.born = 0; // Time since new bullet spawned
     },
 
@@ -78,21 +80,43 @@ var Bullet = new Phaser.Class({
 
 var score = 0;
 var scoreText;
+var rt;
+var blast;
+var nukeFX;
+
+function draw()
+{
+    blast.setRotation(Math.random() * 4 -2);
+
+    blast.setTexture(Math.random() < 0.8 ? 'fire' : 'smoke');
+
+    rt.draw(blast);
+}
+
+function detonate(x, y)
+{
+   
+    blast.setPosition(x, y).setScale(1)
+    blast.setVisible(true);
+    nukeFX.restart();
+}
 
 function preload() {
     // Load in images and sprites
-    this.load.image('background','assets/background.gif');
+    this.load.image('background', 'assets/background.gif');
     this.load.image('player', 'assets/sprites/spaceship.png');
     this.load.image('enemy', 'assets/sprites/enemyShip.png')
     this.load.image('bullet', 'assets/sprites/bullets/bullet1.png');
     this.load.image('target', 'assets/demoscene/ball.png');
     this.load.image('health', 'assets/sprites/hp.png');
+    this.load.image('fire', 'assets/particles/muzzleflash3.png');
+    this.load.image('smoke', 'assets/particles/smoke-puff.png');
 }
 
 function create() {
     // Set world bounds
-    let jd =1050
-    this.physics.world.setBounds(-jd, -jd, 3*jd+150, 3*jd+150);
+    let jd = 1050
+    this.physics.world.setBounds(-jd, -jd, 3 * jd + 150, 3 * jd + 150);
 
     // Add 2 groups for Bullet objects
     playerBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
@@ -103,15 +127,37 @@ function create() {
     player = this.physics.add.sprite(800, 600, 'player');
     enemy = this.physics.add.sprite(300, 600, 'enemy');
     reticle = this.physics.add.sprite(800, 700, 'target');
+  
 
     // Set sprite variables
     player.health = 5;
     enemy.health = 3;
     enemy.lastFired = 0;
 
+    rt = this.make.renderTexture({ x: 0, y: 0, width: 100, height: 100 });
+    blast = this.add.follower(null, 50, 800, 'fire').setVisible(false);
+    var curve = new Phaser.Curves.Spline([200, 500, 600, 500, 625, 475, 200, 500, 400, 500, 400, 250]);
+    blast.setPath(curve);
+    nukeFX = this.tweens.add({
+        targets: blast,
+        scaleX: 5,
+        scaleY: 5,
+        alpha: 0,
+        duration: 1000,
+        ease: "Bounce.easeInOut",
+        complete: function () {
+            console.log('Complete');
+            rt.clear(); 
+            blast.alpha = 0
+         },
+        paused: true
+    });
+    nukeFX.pause();
+    nukeFX.setCallback('update', draw, [], this);
+
 
     scoreText = this.add.text(1000, -250, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
-    scoreText.setScrollFactor(0,0)
+    scoreText.setScrollFactor(0, 0)
 
     hp1 = this.add.image(-350, -250, 'health').setScrollFactor(0, 0);
     hp2 = this.add.image(-300, -250, 'health').setScrollFactor(0, 0);
@@ -144,10 +190,12 @@ function create() {
     // });
 
     cursors = this.input.keyboard.addKeys(
-        {up:Phaser.Input.Keyboard.KeyCodes.W,
-        down:Phaser.Input.Keyboard.KeyCodes.S,
-        left:Phaser.Input.Keyboard.KeyCodes.A,
-        right:Phaser.Input.Keyboard.KeyCodes.D});
+        {
+            up: Phaser.Input.Keyboard.KeyCodes.W,
+            down: Phaser.Input.Keyboard.KeyCodes.S,
+            left: Phaser.Input.Keyboard.KeyCodes.A,
+            right: Phaser.Input.Keyboard.KeyCodes.D
+        });
     // Enables movement of player with WASD keys
     // this.input.keyboard.on('keydown_W', function (event) {
     //     player.setAccelerationY(-800);
@@ -220,12 +268,12 @@ function enemyHitCallback(enemyHit, bulletHit) {
     if (bulletHit.active === true && enemyHit.active === true) {
         enemyHit.health = enemyHit.health - 1;
         console.log("Enemy hp: ", enemyHit.health);
-
         // Kill enemy if health <= 0
         if (enemyHit.health <= 0) {
             enemyHit.setActive(false).setVisible(false);
             score++;
             scoreText.setText('Score: ' + score);
+            detonate(enemyHit.x, enemyHit.y,);
         }
 
         // Destroy bullet
@@ -318,8 +366,8 @@ function constrainReticle(reticle) {
     else if (distY < -600)
         reticle.y = player.y - 600;
 }
-var accelerationY=0
-var accelerationX=0
+var accelerationY = 0
+var accelerationX = 0
 
 function update(time, delta) {
     // Rotates player to face towards reticle
@@ -332,41 +380,41 @@ function update(time, delta) {
     this.cameras.main.startFollow(reticle);
 
 
-    
+
 
     //Make reticle move with player
     reticle.body.velocity.x = player.body.velocity.x;
     reticle.body.velocity.y = player.body.velocity.y;
-    
+
     if (cursors.left.isDown) {
-        player.setAccelerationX(accelerationX-=260);
-      }  
-      if (cursors.right.isDown) {
-        player.setAccelerationX(accelerationX+=260);
-      }  
-      if (cursors.down.isDown) {
-        player.setAccelerationY(accelerationY+=260);
+        player.setAccelerationX(accelerationX -= 260);
+    }
+    if (cursors.right.isDown) {
+        player.setAccelerationX(accelerationX += 260);
+    }
+    if (cursors.down.isDown) {
+        player.setAccelerationY(accelerationY += 260);
         player.setAccelerationX(0);
 
-      } 
-      if (cursors.up.isDown) {
-        player.setAccelerationY(accelerationY-=260);
+    }
+    if (cursors.up.isDown) {
+        player.setAccelerationY(accelerationY -= 260);
         player.setAccelerationX(0);
-      }
+    }
 
-      if(accelerationX>5)
-      accelerationX/=2
-      else if(accelerationX<-5)
-      accelerationX = -(accelerationX/2)*-1
-      else accelerationX=0
+    if (accelerationX > 5)
+        accelerationX /= 2
+    else if (accelerationX < -5)
+        accelerationX = -(accelerationX / 2) * -1
+    else accelerationX = 0
 
-      if(accelerationY>5)
-      accelerationY/=2
-      else if(accelerationY<-5)
-      accelerationY = -(accelerationY/2)*-1
-      else accelerationY=0
-      player.setAccelerationX(accelerationX);
-      player.setAccelerationY(accelerationY);
+    if (accelerationY > 5)
+        accelerationY /= 2
+    else if (accelerationY < -5)
+        accelerationY = -(accelerationY / 2) * -1
+    else accelerationY = 0
+    player.setAccelerationX(accelerationX);
+    player.setAccelerationY(accelerationY);
     // Constrain velocity of player
     constrainVelocity(player, 500);
 
