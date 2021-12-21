@@ -26,6 +26,7 @@ var config = {
     }
 };
 var game = new Phaser.Game(config);
+let cursors;
 
 var Bullet = new Phaser.Class({
 
@@ -130,44 +131,49 @@ function create ()
     this.cameras.main.startFollow(player);
 
     // Creates object for input with WASD kets
-    moveKeys = this.input.keyboard.addKeys({
-        'up': Phaser.Input.Keyboard.KeyCodes.W,
-        'down': Phaser.Input.Keyboard.KeyCodes.S,
-        'left': Phaser.Input.Keyboard.KeyCodes.A,
-        'right': Phaser.Input.Keyboard.KeyCodes.D
-    });
+    // moveKeys = this.input.keyboard.addKeys({
+    //     'up': Phaser.Input.Keyboard.KeyCodes.W,
+    //     'down': Phaser.Input.Keyboard.KeyCodes.S,
+    //     'left': Phaser.Input.Keyboard.KeyCodes.A,
+    //     'right': Phaser.Input.Keyboard.KeyCodes.D
+    // });
 
+    cursors = this.input.keyboard.addKeys(
+        {up:Phaser.Input.Keyboard.KeyCodes.W,
+        down:Phaser.Input.Keyboard.KeyCodes.S,
+        left:Phaser.Input.Keyboard.KeyCodes.A,
+        right:Phaser.Input.Keyboard.KeyCodes.D});
     // Enables movement of player with WASD keys
-    this.input.keyboard.on('keydown_W', function (event) {
-        player.setAccelerationY(-800);
-    });
-    this.input.keyboard.on('keydown_S', function (event) {
-        player.setAccelerationY(800);
-    });
-    this.input.keyboard.on('keydown_A', function (event) {
-        player.setAccelerationX(-800);
-    });
-    this.input.keyboard.on('keydown_D', function (event) {
-        player.setAccelerationX(800);
-    });
+    // this.input.keyboard.on('keydown_W', function (event) {
+    //     player.setAccelerationY(-800);
+    // });
+    // this.input.keyboard.on('keydown_S', function (event) {
+    //     player.setAccelerationY(800);
+    // });
+    // this.input.keyboard.on('keydown_A', function (event) {
+    //     player.setAccelerationX(-800);
+    // });
+    // this.input.keyboard.on('keydown_D', function (event) {
+    //     player.setAccelerationX(800);
+    // });
 
-    // Stops player acceleration on uppress of WASD keys
-    this.input.keyboard.on('keyup_W', function (event) {
-        if (moveKeys['down'].isUp)
-            player.setAccelerationY(0);
-    });
-    this.input.keyboard.on('keyup_S', function (event) {
-        if (moveKeys['up'].isUp)
-            player.setAccelerationY(0);
-    });
-    this.input.keyboard.on('keyup_A', function (event) {
-        if (moveKeys['right'].isUp)
-            player.setAccelerationX(0);
-    });
-    this.input.keyboard.on('keyup_D', function (event) {
-        if (moveKeys['left'].isUp)
-            player.setAccelerationX(0);
-    });
+    // // Stops player acceleration on uppress of WASD keys
+    // this.input.keyboard.on('keyup_W', function (event) {
+    //     if (moveKeys['down'].isUp)
+    //         player.setAccelerationY(0);
+    // });
+    // this.input.keyboard.on('keyup_S', function (event) {
+    //     if (moveKeys['up'].isUp)
+    //         player.setAccelerationY(0);
+    // });
+    // this.input.keyboard.on('keyup_A', function (event) {
+    //     if (moveKeys['right'].isUp)
+    //         player.setAccelerationX(0);
+    // });
+    // this.input.keyboard.on('keyup_D', function (event) {
+    //     if (moveKeys['left'].isUp)
+    //         player.setAccelerationX(0);
+    // });
 
     // Fires bullet from player on left click of mouse
     this.input.on('pointerdown', function (pointer, time, lastFired) {
@@ -317,15 +323,32 @@ function constrainReticle(reticle)
 
 function update (time, delta)
 {
+
     // Rotates player to face towards reticle
     player.rotation = Phaser.Math.Angle.Between(player.x, player.y, reticle.x, reticle.y)+1.57;
 
     // Rotates enemy to face towards player
     enemy.rotation = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y)+1.57;
 
+
+    
+
     //Make reticle move with player
     reticle.body.velocity.x = player.body.velocity.x;
     reticle.body.velocity.y = player.body.velocity.y;
+    
+    if (cursors.left.isDown) {
+        player.setVelocityX(-160);
+      }  
+      if (cursors.right.isDown) {
+        player.setVelocityX(160);
+      }  
+      if (cursors.down.isDown) {
+        player.setVelocityY(160);
+      } 
+      if (cursors.up.isDown) {
+        player.setVelocityY(-160);
+      }
 
     // Constrain velocity of player
     constrainVelocity(player, 500);
