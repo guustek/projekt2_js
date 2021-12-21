@@ -25,7 +25,6 @@ var config = {
                 }
     }
 };
-
 var game = new Phaser.Game(config);
 
 var Bullet = new Phaser.Class({
