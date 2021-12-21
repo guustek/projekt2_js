@@ -98,7 +98,7 @@ function create() {
     enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     // Add background player, enemy, reticle, healthpoint sprites
-    background = this.add.image(920, 920, 'background').setScale(5);
+    background = this.add.tileSprite(960, 960, 1840,1840, "background");
     player = this.physics.add.sprite(800, 600, 'player');
     enemy = this.physics.add.sprite(300, 600, 'enemy');
     reticle = this.physics.add.sprite(800, 700, 'target');
