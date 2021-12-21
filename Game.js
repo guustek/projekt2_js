@@ -91,14 +91,15 @@ function preload() {
 
 function create() {
     // Set world bounds
-    this.physics.world.setBounds(0, 0, 1840, 1840);
+    let jd = 930
+    this.physics.world.setBounds(-jd+20, -jd+20, 4*jd, 4*jd);
 
     // Add 2 groups for Bullet objects
     playerBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
     enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     // Add background player, enemy, reticle, healthpoint sprites
-    background = this.add.tileSprite(960, 960, 1840,1840, "background");
+    background = this.add.tileSprite(960, 960, 1840,1840, "background").setScale(2);
     player = this.physics.add.sprite(800, 600, 'player');
     enemy = this.physics.add.sprite(300, 600, 'enemy');
     reticle = this.physics.add.sprite(800, 700, 'target');
@@ -268,7 +269,7 @@ function enemyFire(enemy, player, time, gameObject) {
         return;
     }
 
-    if ((time - enemy.lastFired) > 1000) {
+    if ((time - enemy.lastFired) > 2000) {
         enemy.lastFired = time;
 
         // Get bullet from bullets group
