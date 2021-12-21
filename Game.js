@@ -81,7 +81,7 @@ var scoreText;
 
 function preload() {
     // Load in images and sprites
-    this.load.image('background','assets/underwater1.png');
+    this.load.image('background','assets/background.gif');
     this.load.image('player', 'assets/sprites/spaceship.png');
     this.load.image('enemy', 'assets/sprites/enemyShip.png')
     this.load.image('bullet', 'assets/sprites/bullets/bullet1.png');
@@ -91,15 +91,15 @@ function preload() {
 
 function create() {
     // Set world bounds
-    let jd = 930
-    this.physics.world.setBounds(-jd+20, -jd+20, 4*jd, 4*jd);
+    let jd =1050
+    this.physics.world.setBounds(-jd, -jd, 3*jd+150, 3*jd+150);
 
     // Add 2 groups for Bullet objects
     playerBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
     enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     // Add background player, enemy, reticle, healthpoint sprites
-    background = this.add.tileSprite(960, 960, 1840,1840, "background").setScale(2);
+    background = this.add.image(600, 600, "background").setScale(5);
     player = this.physics.add.sprite(800, 600, 'player');
     enemy = this.physics.add.sprite(300, 600, 'enemy');
     reticle = this.physics.add.sprite(800, 700, 'target');
