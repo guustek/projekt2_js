@@ -26,8 +26,6 @@ var config = {
 };
 var game = new Phaser.Game(config);
 
-var hp = []
-
 var Bullet = new Phaser.Class({
 
     Extends: Phaser.GameObjects.Image,
@@ -77,17 +75,16 @@ var Bullet = new Phaser.Class({
 
 });
 
+var score = 0;
+var scoreText;
+
 function preload() {
     // Load in images and sprites
-    this.load.image('player_handgun', 'assets/sprites/spaceship.png',
-        { frameWidth: 66, frameHeight: 60 }
-    );
-    this.load.image('enemy', 'assets/sprites/enemyShip.png', 
-     )
+    this.load.image('player', 'assets/sprites/spaceship.png');
+    this.load.image('enemy', 'assets/sprites/enemyShip.png')
     this.load.image('bullet', 'assets/sprites/bullets/bullet1.png');
     this.load.image('target', 'assets/demoscene/ball.png');
-    this.load.image('background', 'assets/background.gif');
-
+    this.load.image('background','assets/background.gif');
     this.load.image('health', 'assets/sprites/hp.png');
 }
 
@@ -101,30 +98,35 @@ function create() {
 
     // Add background player, enemy, reticle, healthpoint sprites
     background = this.add.image(320, 320, 'background');
-    player = this.physics.add.sprite(800, 600, 'player_handgun');
+    player = this.physics.add.sprite(800, 600, 'player');
     enemy = this.physics.add.sprite(300, 600, 'enemy');
     reticle = this.physics.add.sprite(800, 700, 'target');
 
     // Set sprite variables
-    player.health = 3;
+    player.health = 5;
     enemy.health = 3;
     enemy.lastFired = 0;
+
+
+    scoreText = this.add.text(1000, -250, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
+    scoreText.setScrollFactor(0,0)
 
     hp1 = this.add.image(-350, -250, 'health').setScrollFactor(0, 0);
     hp2 = this.add.image(-300, -250, 'health').setScrollFactor(0, 0);
     hp3 = this.add.image(-250, -250, 'health').setScrollFactor(0, 0);
+    hp4 = this.add.image(-200, -250, 'health').setScrollFactor(0, 0);
+    hp5 = this.add.image(-150, -250, 'health').setScrollFactor(0, 0);
 
     // Set image/sprite properties
-    background.setOrigin(0.5, 0.5).setDisplaySize(2800, 2400);
     player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
     enemy.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true);
     reticle.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
-    for(let i = 0; i < hp.length; i++) {
-        hp[0].setOrigin(0.5, 0.5).setDisplaySize(50, 50);
-    }
+
     hp1.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
     hp2.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
     hp3.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    hp4.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    hp5.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
 
 
 
@@ -216,6 +218,8 @@ function enemyHitCallback(enemyHit, bulletHit) {
         // Kill enemy if health <= 0
         if (enemyHit.health <= 0) {
             enemyHit.setActive(false).setVisible(false);
+            score++;
+            scoreText.setText('Score: ' + score);
         }
 
         // Destroy bullet
@@ -232,6 +236,12 @@ function playerHitCallback(playerHit, bulletHit) {
 
 
         // Kill hp sprites and kill player if health <= 0
+        if (playerHit.health == 4) {
+            hp5.destroy();
+        }
+        if (playerHit.health == 3) {
+            hp4.destroy();
+        }
         if (playerHit.health == 2) {
             hp3.destroy();
         }
