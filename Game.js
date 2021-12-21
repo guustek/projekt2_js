@@ -81,24 +81,24 @@ var scoreText;
 
 function preload() {
     // Load in images and sprites
+    this.load.image('background','assets/underwater1.png');
     this.load.image('player', 'assets/sprites/spaceship.png');
     this.load.image('enemy', 'assets/sprites/enemyShip.png')
     this.load.image('bullet', 'assets/sprites/bullets/bullet1.png');
     this.load.image('target', 'assets/demoscene/ball.png');
-    this.load.image('background','assets/background.gif');
     this.load.image('health', 'assets/sprites/hp.png');
 }
 
 function create() {
     // Set world bounds
-    this.physics.world.setBounds(0, 0, 920, 920);
+    this.physics.world.setBounds(0, 0, 1840, 1840);
 
     // Add 2 groups for Bullet objects
     playerBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
     enemyBullets = this.physics.add.group({ classType: Bullet, runChildUpdate: true });
 
     // Add background player, enemy, reticle, healthpoint sprites
-    background = this.add.image(320, 320, 'background');
+    background = this.add.image(920, 920, 'background').setScale(5);
     player = this.physics.add.sprite(800, 600, 'player');
     enemy = this.physics.add.sprite(300, 600, 'enemy');
     reticle = this.physics.add.sprite(800, 700, 'target');
@@ -338,31 +338,31 @@ function update(time, delta) {
     reticle.body.velocity.y = player.body.velocity.y;
     
     if (cursors.left.isDown) {
-        player.setAccelerationX(accelerationX-=10);
+        player.setAccelerationX(accelerationX-=260);
       }  
       if (cursors.right.isDown) {
-        player.setAccelerationX(accelerationX+=10);
+        player.setAccelerationX(accelerationX+=260);
       }  
       if (cursors.down.isDown) {
-        player.setAccelerationY(accelerationY+=10);
+        player.setAccelerationY(accelerationY+=260);
         player.setAccelerationX(0);
 
       } 
       if (cursors.up.isDown) {
-        player.setAccelerationY(accelerationY-=10);
+        player.setAccelerationY(accelerationY-=260);
         player.setAccelerationX(0);
       }
 
       if(accelerationX>5)
-      accelerationX-=5
+      accelerationX/=2
       else if(accelerationX<-5)
-      accelerationX+=5
+      accelerationX = -(accelerationX/2)*-1
       else accelerationX=0
 
       if(accelerationY>5)
-      accelerationY-=5
+      accelerationY/=2
       else if(accelerationY<-5)
-      accelerationY+=5
+      accelerationY = -(accelerationY/2)*-1
       else accelerationY=0
       player.setAccelerationX(accelerationX);
       player.setAccelerationY(accelerationY);
