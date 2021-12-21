@@ -317,6 +317,8 @@ function constrainReticle(reticle) {
     else if (distY < -600)
         reticle.y = player.y - 600;
 }
+var accelerationY=0
+var accelerationX=0
 
 function update(time, delta) {
     // Rotates player to face towards reticle
@@ -336,19 +338,34 @@ function update(time, delta) {
     reticle.body.velocity.y = player.body.velocity.y;
     
     if (cursors.left.isDown) {
-        player.setVelocityX(-160);
+        player.setAccelerationX(accelerationX-=10);
       }  
       if (cursors.right.isDown) {
-        player.setVelocityX(160);
+        player.setAccelerationX(accelerationX+=10);
       }  
       if (cursors.down.isDown) {
-        player.setVelocityY(160);
+        player.setAccelerationY(accelerationY+=10);
+        player.setAccelerationX(0);
+
       } 
       if (cursors.up.isDown) {
-        player.setVelocityY(-160);
+        player.setAccelerationY(accelerationY-=10);
+        player.setAccelerationX(0);
       }
 
+      if(accelerationX>5)
+      accelerationX-=5
+      else if(accelerationX<-5)
+      accelerationX+=5
+      else accelerationX=0
 
+      if(accelerationY>5)
+      accelerationY-=5
+      else if(accelerationY<-5)
+      accelerationY+=5
+      else accelerationY=0
+      player.setAccelerationX(accelerationX);
+      player.setAccelerationY(accelerationY);
     // Constrain velocity of player
     constrainVelocity(player, 500);
 
