@@ -27,6 +27,7 @@ var config = {
 var game = new Phaser.Game(config);
 let cursors;
 var emitter;
+var gameOver = false;
 
 var Bullet = new Phaser.Class({
 
@@ -83,19 +84,18 @@ var scoreText;
 var rt;
 var blast;
 var nukeFX;
+var enemies;
 
-function draw()
-{
-    blast.setRotation(Math.random() * 4 -2);
+function draw() {
+    blast.setRotation(Math.random() * 4 - 2);
 
     blast.setTexture(Math.random() < 0.8 ? 'fire' : 'smoke');
 
     rt.draw(blast);
 }
 
-function detonate(x, y)
-{
-   
+function detonate(x, y) {
+
     blast.setPosition(x, y).setScale(1)
     blast.setVisible(true);
     nukeFX.restart();
@@ -116,6 +116,7 @@ function preload() {
 function create() {
     // Set world bounds
     let jd = 1050
+
     this.physics.world.setBounds(-jd, -jd, 3 * jd + 150, 3 * jd + 150);
 
     // Add 2 groups for Bullet objects
@@ -125,15 +126,24 @@ function create() {
     // Add background player, enemy, reticle, healthpoint sprites
     background = this.add.image(600, 600, "background").setScale(5);
     player = this.physics.add.sprite(800, 600, 'player');
-    enemy = this.physics.add.sprite(300, 600, 'enemy');
+    player.health = 20;
     reticle = this.physics.add.sprite(800, 700, 'target');
-  
+    enemies = this.physics.add.group();
+    hp = this.physics.add.group({
+        key: "health",
+        repeat: player.health,
+        setXY: { x: -350, y: -250, stepX: 50 },
+        setScrollFactor: (0, 0),
+        setOrigin: (0.5, 0.5),
+        setDisplaySize: (100, 100)
+    });
+    enemy = enemies.create(300, 600, 'enemy');
+    enemy.health = 1;
+    enemy.lastFired = 0;
+    enemy.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true);
+
 
     // Set sprite variables
-    player.health = 5;
-    enemy.health = 3;
-    enemy.lastFired = 0;
-
     rt = this.make.renderTexture({ x: 0, y: 0, width: 100, height: 100 });
     blast = this.add.follower(null, 50, 800, 'fire').setVisible(false);
     var curve = new Phaser.Curves.Spline([200, 500, 600, 500, 625, 475, 200, 500, 400, 500, 400, 250]);
@@ -147,9 +157,9 @@ function create() {
         ease: "Bounce.easeInOut",
         complete: function () {
             console.log('Complete');
-            rt.clear(); 
+            rt.clear();
             blast.alpha = 0
-         },
+        },
         paused: true
     });
     nukeFX.pause();
@@ -158,22 +168,20 @@ function create() {
 
     scoreText = this.add.text(1000, -250, 'Score: 0', { fontSize: '32px', fill: '#FFF' });
     scoreText.setScrollFactor(0, 0)
-
-    hp1 = this.add.image(-350, -250, 'health').setScrollFactor(0, 0);
-    hp2 = this.add.image(-300, -250, 'health').setScrollFactor(0, 0);
-    hp3 = this.add.image(-250, -250, 'health').setScrollFactor(0, 0);
-    hp4 = this.add.image(-200, -250, 'health').setScrollFactor(0, 0);
-    hp5 = this.add.image(-150, -250, 'health').setScrollFactor(0, 0);
+    // hp1 = this.add.image(-350, -250, 'health').setScrollFactor(0, 0);
+    // hp2 = this.add.image(-300, -250, 'health').setScrollFactor(0, 0);
+    // hp3 = this.add.image(-250, -250, 'health').setScrollFactor(0, 0);
+    // hp4 = this.add.image(-200, -250, 'health').setScrollFactor(0, 0);
+    // hp5 = this.add.image(-150, -250, 'health').setScrollFactor(0, 0);
 
     // Set image/sprite properties
     player.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true).setDrag(500, 500);
-    enemy.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true);
     reticle.setOrigin(0.5, 0.5).setDisplaySize(25, 25).setCollideWorldBounds(true);
-    hp1.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
-    hp2.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
-    hp3.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
-    hp4.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
-    hp5.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    // hp1.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    // hp2.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    // hp3.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    // hp4.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
+    // hp5.setOrigin(0.5, 0.5).setDisplaySize(50, 50);
 
 
 
@@ -238,7 +246,10 @@ function create() {
 
         if (bullet) {
             bullet.fire(player, reticle);
-            this.physics.add.collider(enemy, bullet, enemyHitCallback);
+            enemies.children.iterate((enemy) => {
+                this.physics.add.collider(enemy, bullet, enemyHitCallback);
+            })
+
         }
     }, this);
 
@@ -273,6 +284,14 @@ function enemyHitCallback(enemyHit, bulletHit) {
             enemyHit.setActive(false).setVisible(false);
             score++;
             scoreText.setText('Score: ' + score);
+            let enemy1 = enemies.create(Math.random() * 10000 % 1800 + 100, Math.random() * 10000 % 1800 + 100, 'enemy');
+            enemy1.health = 1;
+            enemy1.lastFired = 0;
+            enemy1.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true);
+            let enemy2 = enemies.create(Math.random() * 10000 % 1800 + 100, Math.random() * 10000 % 1800 + 100, 'enemy');
+            enemy2.health = 1;
+            enemy2.lastFired = 0;
+            enemy2.setOrigin(0.5, 0.5).setDisplaySize(132, 120).setCollideWorldBounds(true);
             detonate(enemyHit.x, enemyHit.y,);
         }
 
@@ -285,31 +304,23 @@ function playerHitCallback(playerHit, bulletHit) {
     // Reduce health of player
     if (bulletHit.active === true && playerHit.active === true) {
         playerHit.health = playerHit.health - 1;
-        console.log("Player hp: ", playerHit.health);
-
-
-
-        // Kill hp sprites and kill player if health <= 0
-        if (playerHit.health == 4) {
-            hp5.destroy();
-        }
-        if (playerHit.health == 3) {
-            hp4.destroy();
-        }
-        if (playerHit.health == 2) {
-            hp3.destroy();
-        }
-        else if (playerHit.health == 1) {
-            hp2.destroy();
-        }
-        else {
-            hp1.destroy();
-            // Game over state should execute here
+        console.log("Player hp: ", playerHit.health)
+        let h = hp.children.entries.pop()
+        if (hp.children.size == 0) {
+            detonate(playerHit.x, playerHit.y);
+            playerHit.destroy();
+            reticle.destroy();
+            gameOver = true
+        } else {
+            h.destroy();
         }
 
-        // Destroy bullet
-        bulletHit.setActive(false).setVisible(false);
+
     }
+
+
+    // Destroy bullet
+    bulletHit.setActive(false).setVisible(false);
 }
 
 function enemyFire(enemy, player, time, gameObject) {
@@ -317,7 +328,7 @@ function enemyFire(enemy, player, time, gameObject) {
         return;
     }
 
-    if ((time - enemy.lastFired) > 2000) {
+    if ((time - enemy.lastFired) > 900) {
         enemy.lastFired = time;
 
         // Get bullet from bullets group
@@ -370,16 +381,25 @@ var accelerationY = 0
 var accelerationX = 0
 
 function update(time, delta) {
+
+    if (gameOver) {
+        scoreText = this.add.text(player.x-200, player.y, 'Game over', { fontSize: '80px', fill: '#FFF' });
+        return;
+    }
+    hp.children.iterate((h,i) => {
+        h.x = player.x-200+(20*i); h.y = player.y-100
+        i++
+    })
     // Rotates player to face towards reticle
     player.rotation = Phaser.Math.Angle.Between(player.x, player.y, reticle.x, reticle.y) + 1.57;
 
     // Rotates enemy to face towards player
-    enemy.rotation = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y) + 1.57;
+    enemies.children.iterate(function (enemy) {
+        enemy.rotation = Phaser.Math.Angle.Between(enemy.x, enemy.y, player.x, player.y) + 1.57;
+    });
 
     // Camera follows reticle
     this.cameras.main.startFollow(reticle);
-
-
 
 
     //Make reticle move with player
@@ -422,5 +442,30 @@ function update(time, delta) {
     constrainReticle(reticle);
 
     // Make enemy fire
-    enemyFire(enemy, player, time, this);
+    enemies.children.iterate(enemy => {
+        enemyFire(enemy, player, time, this)
+    })
+    enemies.children.iterate(enemy => {
+
+        // if player to left of enemy AND enemy moving to right (or not moving)
+        if (player.x < enemy.x && enemy.body.velocity.x >= 0) {
+            // move enemy to left
+            enemy.body.velocity.x = -50;
+        }
+        // if player to right of enemy AND enemy moving to left (or not moving)
+        else if (player.x > enemy.x && enemy.body.velocity.x <= 0) {
+            // move enemy to right
+            enemy.body.velocity.x = 50;
+        }
+        if (player.y < enemy.y && enemy.body.velocity.y >= 0) {
+            // move enemy to left
+            enemy.body.velocity.y = -50;
+        }
+        // if player to right of enemy AND enemy moving to left (or not moving)
+        else if (player.y > enemy.y && enemy.body.velocity.y <= 0) {
+            // move enemy to right
+            enemy.body.velocity.y = 50;
+        }
+    })
+
 }
