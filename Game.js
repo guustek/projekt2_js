@@ -2,6 +2,7 @@ var config = {
     type: Phaser.AUTO,
     width: 800,
     height: 600,
+    fps: 144,
     physics: {
         default: 'arcade',
         arcade: {
@@ -116,7 +117,7 @@ function preload() {
 function create() {
     // Set world bounds
     let jd = 1050
-
+    this.physics.world.setFPS(144)
     this.physics.world.setBounds(-jd, -jd, 3 * jd + 150, 3 * jd + 150);
 
     // Add 2 groups for Bullet objects
